@@ -1,10 +1,14 @@
 [project]
 name = "funapi"
-version = "1.0.2"
+version = "1.0.3"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.8"
 dependencies = [ "funutil>=1.0.33", "openapi-python-client>=0.21.0", "funfake", "requests",]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [dependency-groups]
 dev = [ "pytest>=7.0",]
