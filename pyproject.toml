@@ -3,7 +3,7 @@ name = "funapi"
 version = "1.0.3"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 dependencies = [ "funutil>=1.0.33", "openapi-python-client>=0.21.0", "funfake", "requests",]
 
 [build-system]
