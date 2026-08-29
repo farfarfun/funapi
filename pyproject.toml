@@ -4,11 +4,11 @@ version = "1.0.3"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = [ "funutil>=1.0.33", "openapi-python-client>=0.21.0", "funfake", "requests",]
+dependencies = [ "funutil>=1.0.33", "openapi-python-client>=0.21.0", "funfake", "requests>=2.33.0",]
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [dependency-groups]
-dev = [ "pytest>=7.0",]
+dev = [ "pytest>=9.0.3",]
