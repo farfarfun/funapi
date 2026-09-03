@@ -1,10 +1,12 @@
 [project]
 name = "funapi"
-version = "1.0.3"
-description = "Add your description here"
+version = "1.0.4"
+description = "OpenAPI 工具集：根据 OpenAPI/Swagger 文档一键生成 Python API 客户端代码，并提供 OpenAPI v2 转 v3 的辅助函数"
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = [ "funutil>=1.0.33", "openapi-python-client>=0.21.0", "funfake", "requests>=2.33.0",]
+license = "MIT"
+license-files = ["LICENSE"]
+dependencies = [ "farlog>=1.1.7", "openapi-python-client>=0.21.0", "funfake>=1.1.5", "requests>=2.33.0",]
 
 [build-system]
 requires = ["hatchling"]

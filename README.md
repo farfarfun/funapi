@@ -38,3 +38,16 @@ convert_openapi_v3(
 
 - 没有命令行入口，需在 Python 代码中调用上述函数。
 - `convert_openapi_v3` 依赖外部在线转换服务（converter.swagger.io），需要联网。
+
+---
+
+## 关于 farfarfun
+
+[farfarfun](https://github.com/farfarfun) 是一个专注于实用工具库的开源组织，
+涵盖云存储、数据处理、AI、多媒体与开发工具链等方向。
+
+- 🏠 组织主页：<https://github.com/farfarfun>
+- 📦 PyPI：<https://pypi.org/user/niuliangtao/>
+- 📧 联系：farfarfun@qq.com
+
+本项目基于 [MIT](LICENSE) 协议开源。
