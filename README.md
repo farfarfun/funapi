@@ -39,6 +39,10 @@ convert_openapi_v3(
 - 没有命令行入口，需在 Python 代码中调用上述函数。
 - `convert_openapi_v3` 依赖外部在线转换服务（converter.swagger.io），需要联网。
 
+## 🐳 推荐
+
+如果你在寻找 AI 模型路由服务,欢迎通过我的推荐链接体验 [OrcaRouter](https://www.orcarouter.ai/ref/ref_99e484f735afe381b366)。
+
 ---
 
 ## 关于 farfarfun
