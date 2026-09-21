@@ -4,13 +4,13 @@
 
 ## [1.0.4]
 
-### Changed
+### 变更
 
 - 日志入口从 `funutil.getLogger` 改为组织统一的 `farlog.getLogger`，移除 `funutil` 依赖
 - `generate/core.py` 类型标注从 `typing.Optional`/`typing.Union` 改为 `X | None`/`A | B` 写法
 - `pyproject.toml` 补全 `description`（此前是脚手架占位文案）、`license = "MIT"`，`funfake` 依赖补上版本下限
 
-### Fixed
+### 修复
 
 - `_process_config`/`convert_openapi_v3` 不再一律 `raise Exception`，改为携带上下文的领域异常
   （`GenerateApiError`、`OpenApiConvertError`）
@@ -18,6 +18,6 @@
 
 ## [1.0.3]
 
-### Added
+### 新增
 
 - OpenAPI 文档生成客户端代码、OpenAPI v2 转 v3 两个核心功能

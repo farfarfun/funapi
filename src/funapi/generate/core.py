@@ -91,7 +91,7 @@ def generate_api(
         url: OpenAPI 文档的 URL，与 `path` 二选一。
         path: 本地 OpenAPI 文档路径，与 `url` 二选一。
         custom_template_path: 自定义模板目录路径，可选。
-        meta_type: 生成客户端时使用的元信息类型，默认 `MetaType.POETRY`。
+        meta: 生成客户端时使用的元信息类型，默认 `MetaType.POETRY`。
         file_encoding: 读取 OpenAPI 文档时使用的编码，默认 `"utf-8"`。
         config_path: 自定义生成器配置文件路径，可选。
         overwrite: 目标目录已存在时是否覆盖，默认 `False`。
