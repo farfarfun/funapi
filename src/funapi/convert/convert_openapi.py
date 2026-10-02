@@ -27,15 +27,26 @@ def convert_openapi_v3(
 
     Raises:
         FileNotFoundError: `openapi_filepath_ori` 不存在时抛出（内置行为）。
-        OpenApiConvertError: 远程转换服务返回非 2xx 状态码，或返回内容不是
-            合法 JSON 时抛出，错误信息携带请求的 URL 与输入文件路径。
+        OpenApiConvertError: 远程转换请求失败、服务返回非 2xx 状态码，
+            或返回内容不是合法 JSON 时抛出，错误信息携带请求的
+            URL 与输入文件路径。
     """
     url = "https://converter.swagger.io/api/convert"
     headers = fake_header()
     with open(openapi_filepath_ori, "r", encoding="utf-8") as f:
         original_doc = json.load(f)
 
-    response = requests.post(url, json=original_doc, headers=headers)
+    try:
+        response = requests.post(
+            url,
+            json=original_doc,
+            headers=headers,
+            timeout=(5, 30),
+        )
+    except requests.RequestException as err:
+        raise OpenApiConvertError(
+            f"调用 {url} 转换 {openapi_filepath_ori} 失败：{err}"
+        ) from err
     if not response.ok:
         raise OpenApiConvertError(
             f"调用 {url} 转换 {openapi_filepath_ori} 失败："

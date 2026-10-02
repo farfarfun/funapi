@@ -20,7 +20,7 @@ from pathlib import Path
 from unittest import mock
 
 import pytest
-
+import requests
 
 # ---------------------------------------------------------------------------
 # 导入冒烟测试
@@ -32,14 +32,14 @@ def test_import_top_level_package():
 
 
 def test_import_convert_submodule():
-    import funapi.convert  # noqa: F401
+    import funapi.convert
 
     assert hasattr(funapi.convert, "convert_openapi_v3")
     assert callable(funapi.convert.convert_openapi_v3)
 
 
 def test_import_generate_submodule():
-    import funapi.generate  # noqa: F401
+    import funapi.generate
 
     assert hasattr(funapi.generate, "generate_api")
     assert callable(funapi.generate.generate_api)
@@ -83,6 +83,7 @@ def test_convert_openapi_v3_mocks_http_call(tmp_path):
     assert called_args[0] == "https://converter.swagger.io/api/convert"
     assert called_kwargs["json"] == original_doc
     assert "headers" in called_kwargs
+    assert called_kwargs["timeout"] == (5, 30)
 
     # 模拟的转换文档应被正确写出。
     assert v3_path.exists()
@@ -98,14 +99,70 @@ def test_convert_openapi_v3_raises_on_missing_input_file(tmp_path):
 
     missing = tmp_path / "does-not-exist.json"
 
-    with mock.patch("funapi.convert.convert_openapi.requests.post") as mock_post:
-        with pytest.raises(FileNotFoundError):
-            convert_openapi_v3(
-                openapi_filepath_ori=str(missing),
-                openapi_filepath_v3=str(tmp_path / "out.json"),
-            )
+    with (
+        mock.patch("funapi.convert.convert_openapi.requests.post") as mock_post,
+        pytest.raises(FileNotFoundError),
+    ):
+        convert_openapi_v3(
+            openapi_filepath_ori=str(missing),
+            openapi_filepath_v3=str(tmp_path / "out.json"),
+        )
 
     mock_post.assert_not_called()
+
+
+def test_convert_openapi_v3_raises_on_http_error(tmp_path):
+    from funapi.convert.convert_openapi import OpenApiConvertError, convert_openapi_v3
+
+    ori_path = tmp_path / "openapi-ori.json"
+    ori_path.write_text("{}", encoding="utf-8")
+    response = mock.Mock(ok=False, status_code=503, text="unavailable")
+
+    with (
+        mock.patch(
+            "funapi.convert.convert_openapi.requests.post", return_value=response
+        ),
+        pytest.raises(OpenApiConvertError, match=r"503.*unavailable"),
+    ):
+        convert_openapi_v3(ori_path, tmp_path / "out.json")
+
+
+def test_convert_openapi_v3_raises_on_invalid_response_json(tmp_path):
+    from funapi.convert.convert_openapi import OpenApiConvertError, convert_openapi_v3
+
+    ori_path = tmp_path / "openapi-ori.json"
+    ori_path.write_text("{}", encoding="utf-8")
+    response = mock.Mock(ok=True)
+    response.json.side_effect = ValueError("invalid JSON")
+
+    with (
+        mock.patch(
+            "funapi.convert.convert_openapi.requests.post", return_value=response
+        ),
+        pytest.raises(OpenApiConvertError, match=r"响应不是合法 JSON"),
+    ):
+        convert_openapi_v3(ori_path, tmp_path / "out.json")
+
+
+def test_convert_openapi_v3_wraps_request_error_with_context(tmp_path):
+    from funapi.convert.convert_openapi import OpenApiConvertError, convert_openapi_v3
+
+    ori_path = tmp_path / "openapi-ori.json"
+    ori_path.write_text("{}", encoding="utf-8")
+
+    with (
+        mock.patch(
+            "funapi.convert.convert_openapi.requests.post",
+            side_effect=requests.ConnectionError("connection refused"),
+        ),
+        pytest.raises(OpenApiConvertError) as exc_info,
+    ):
+        convert_openapi_v3(ori_path, tmp_path / "out.json")
+
+    message = str(exc_info.value)
+    assert "https://converter.swagger.io/api/convert" in message
+    assert str(ori_path) in message
+    assert isinstance(exc_info.value.__cause__, requests.ConnectionError)
 
 
 # ---------------------------------------------------------------------------
@@ -118,18 +175,45 @@ def test_generate_api_requires_url_or_path():
 
     这是 funapi 自身的校验逻辑（不涉及网络或代码生成），因此直接测试而不跳过。
     """
-    from funapi.generate import generate_api
+    from funapi.generate.core import GenerateApiError, generate_api
 
-    with pytest.raises(Exception):
+    with pytest.raises(GenerateApiError, match="either provide --url or --path"):
         generate_api(url=None, path=None)
 
 
 def test_generate_api_rejects_url_and_path_together():
     """验证同时提供 --url 和 --path 时 _process_config 也会抛出异常。"""
-    from funapi.generate import generate_api
+    from funapi.generate.core import GenerateApiError, generate_api
 
-    with pytest.raises(Exception):
+    with pytest.raises(GenerateApiError, match="either --url or --path, not both"):
         generate_api(url="https://example.com/openapi.json", path=Path("some.json"))
+
+
+def test_generate_api_rejects_unknown_encoding(tmp_path):
+    from funapi.generate.core import GenerateApiError, generate_api
+
+    with pytest.raises(GenerateApiError, match="Unknown encoding: invalid-encoding"):
+        generate_api(path=tmp_path / "openapi.json", file_encoding="invalid-encoding")
+
+
+def test_generate_api_wraps_config_load_error(tmp_path):
+    from funapi.generate import core as generate_core
+
+    config_path = tmp_path / "missing-config.yaml"
+    with (
+        mock.patch.object(
+            generate_core.ConfigFile,
+            "load_from_path",
+            side_effect=OSError("permission denied"),
+        ),
+        pytest.raises(generate_core.GenerateApiError) as exc_info,
+    ):
+        generate_core.generate_api(
+            path=tmp_path / "openapi.json", config_path=config_path
+        )
+
+    assert str(config_path) in str(exc_info.value)
+    assert isinstance(exc_info.value.__cause__, OSError)
 
 
 def test_generate_api_builds_config_and_delegates_without_network(tmp_path):
