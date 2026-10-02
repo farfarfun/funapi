@@ -8,6 +8,26 @@ license = "MIT"
 license-files = ["LICENSE"]
 dependencies = [ "farlog>=1.1.7", "openapi-python-client>=0.21.0", "funfake>=1.1.5", "requests>=2.33.0",]
 
+[[project.authors]]
+name = "牛哥"
+email = "niuliangtao@qq.com"
+
+[[project.authors]]
+name = "farfarfun"
+email = "farfarfun@qq.com"
+
+[[project.maintainers]]
+name = "牛哥"
+email = "niuliangtao@qq.com"
+
+[[project.maintainers]]
+name = "farfarfun"
+email = "farfarfun@qq.com"
+
+[project.urls]
+Organization = "https://github.com/farfarfun"
+Repository = "https://github.com/farfarfun/funapi"
+Releases = "https://github.com/farfarfun/funapi/releases"
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
