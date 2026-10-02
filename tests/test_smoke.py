@@ -111,6 +111,24 @@ def test_convert_openapi_v3_raises_on_missing_input_file(tmp_path):
     mock_post.assert_not_called()
 
 
+def test_convert_openapi_v3_raises_on_invalid_input_json(tmp_path):
+    """输入文件不是合法 JSON 时抛出带文件路径上下文的领域异常，且不发起请求。"""
+    from funapi.convert.convert_openapi import OpenApiConvertError, convert_openapi_v3
+
+    ori_path = tmp_path / "openapi-ori.json"
+    ori_path.write_text("{not json", encoding="utf-8")
+
+    with (
+        mock.patch("funapi.convert.convert_openapi.requests.post") as mock_post,
+        pytest.raises(OpenApiConvertError) as exc_info,
+    ):
+        convert_openapi_v3(ori_path, tmp_path / "out.json")
+
+    assert str(ori_path) in str(exc_info.value)
+    assert isinstance(exc_info.value.__cause__, json.JSONDecodeError)
+    mock_post.assert_not_called()
+
+
 def test_convert_openapi_v3_raises_on_http_error(tmp_path):
     from funapi.convert.convert_openapi import OpenApiConvertError, convert_openapi_v3
 
@@ -235,12 +253,35 @@ def test_generate_api_builds_config_and_delegates_without_network(tmp_path):
     _, call_kwargs = mock_generate.call_args
     config = call_kwargs["config"]
     assert config.document_source == fake_source
+    assert config.file_encoding == "utf-8"
 
 
-def test_generate_api_cli_entry_point_not_present():
-    """验证 funapi 没有声明 [project.scripts] 入口，因此没有可通过 --help
-    运行的 CLI。这是仓库结构事实，不是测试功能缺失。"""
-    pytest.skip(
-        "funapi 未在 pyproject.toml 中定义 [project.scripts] CLI 入口，"
-        "没有可通过 --help 调用的命令。"
-    )
+def test_generate_api_passes_url_and_custom_template_through(tmp_path):
+    """URL 入口与自定义模板目录应原样传给 openapi_python_client.generate()。"""
+    from funapi.generate import core as generate_core
+
+    template_dir = tmp_path / "templates"
+    template_dir.mkdir()
+
+    with mock.patch.object(generate_core, "generate") as mock_generate:
+        mock_generate.return_value = []
+        generate_core.generate_api(
+            url="https://example.com/openapi.json",
+            custom_template_path=template_dir,
+            output_path=tmp_path / "out",
+            overwrite=True,
+        )
+
+    _, call_kwargs = mock_generate.call_args
+    assert call_kwargs["custom_template_path"] == template_dir
+    config = call_kwargs["config"]
+    assert config.document_source == "https://example.com/openapi.json"
+    assert config.overwrite is True
+
+
+def test_funapi_has_no_console_script_entry_points():
+    """funapi 是纯库，不应声明 CLI 入口；用包元数据断言这一事实。"""
+    from importlib import metadata
+
+    entry_points = metadata.distribution("funapi").entry_points
+    assert [ep.name for ep in entry_points if ep.group == "console_scripts"] == []
