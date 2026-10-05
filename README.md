@@ -13,13 +13,23 @@ pip install funapi
 ### 生成 API 客户端
 
 ```python
+from pathlib import Path
+
 from funapi.generate import generate_api
 
-# 根据 OpenAPI 文档 URL 生成客户端代码
-generate_api(url="https://example.com/openapi.json")
+# 创建最小的 OpenAPI 3 文档
+document = Path("openapi.json")
+document.write_text(
+    '''{
+  "openapi": "3.0.3",
+  "info": {"title": "Demo API", "version": "1.0.0"},
+  "paths": {}
+}''',
+    encoding="utf-8",
+)
 
-# 或者根据本地 OpenAPI 文档文件生成
-generate_api(path="./openapi.json")
+# 根据本地 OpenAPI 文档生成客户端代码
+generate_api(path=document, output_path=Path("demo_api_client"))
 ```
 
 ### OpenAPI v2 转 v3
