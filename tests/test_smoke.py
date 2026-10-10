@@ -16,6 +16,7 @@ funapi 是一个提供两个公开入口的小型 OpenAPI 工具集：
 """
 
 import json
+import sys
 from pathlib import Path
 from unittest import mock
 
@@ -43,6 +44,31 @@ def test_import_generate_submodule():
 
     assert hasattr(funapi.generate, "generate_api")
     assert callable(funapi.generate.generate_api)
+
+
+def test_import_submodules_does_not_initialize_logger(monkeypatch):
+    """导入公开子模块不能触发 farlog 的目录初始化。"""
+    import farlog
+
+    def fail_get_logger(*args, **kwargs):
+        raise AssertionError("import must not initialize a logger")
+
+    module_names = (
+        "funapi.convert",
+        "funapi.convert.convert_openapi",
+        "funapi.generate",
+        "funapi.generate.core",
+    )
+    for name in module_names:
+        sys.modules.pop(name, None)
+
+    with monkeypatch.context() as context:
+        context.setattr(farlog, "getLogger", fail_get_logger)
+        import funapi.convert
+        import funapi.generate  # noqa: F401
+
+    for name in module_names:
+        sys.modules.pop(name, None)
 
 
 # ---------------------------------------------------------------------------

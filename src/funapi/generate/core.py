@@ -1,11 +1,8 @@
 import codecs
 from pathlib import Path
 
-from farlog import getLogger
 from openapi_python_client import MetaType, generate
 from openapi_python_client.config import Config, ConfigFile
-
-logger = getLogger("funapi")
 
 
 class GenerateApiError(ValueError):

@@ -5,8 +5,6 @@ import requests
 from farlog import getLogger
 from funfake.headers import fake_header
 
-logger = getLogger("funapi")
-
 
 class OpenApiConvertError(RuntimeError):
     """调用 converter.swagger.io 转换 OpenAPI 文档失败时抛出。"""
@@ -67,4 +65,4 @@ def convert_openapi_v3(
 
     with open(openapi_filepath_v3, "w", encoding="utf-8") as f:
         f.write(json.dumps(converted_doc, indent=4, ensure_ascii=False))
-    logger.success(f"converted success: {openapi_filepath_v3}")
+    getLogger("funapi").success(f"converted success: {openapi_filepath_v3}")
